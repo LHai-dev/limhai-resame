@@ -1,15 +1,19 @@
-name: Deploy Resume to Pages
+name: Deploy static content to Pages
+
 on:
   push:
     branches: ["main"]
   workflow_dispatch:
+
 permissions:
   contents: read
   pages: write
   id-token: write
+
 concurrency:
   group: "pages"
   cancel-in-progress: false
+
 jobs:
   deploy:
     environment:
@@ -17,64 +21,21 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Repository
+      - name: Checkout
         uses: actions/checkout@v4
-      
-      - name: Prepare Deployment Directory
-        run: |
-          # Ensure clean deployment directory
-          rm -rf _site
-          mkdir -p _site
-          
-          # Fix file permissions
-          find . -type f -exec chmod 644 {} \;
-          find . -type d -exec chmod 755 {} \;
-          
-          # Copy HTML file
-          HTML_FILE=$(find . -maxdepth 1 -name "*.html")
-          if [ -z "$HTML_FILE" ]; then
-            echo "No HTML file found!"
-            exit 1
-          fi
-          cp "$HTML_FILE" _site/index.html
-          
-          # Create directories
-          mkdir -p _site/css _site/js _site/icon _site/img
-          
-          # Copy essential files with permission reset
-          cp css/*.css _site/css/ 2>/dev/null || true
-          cp js/*.js _site/js/ 2>/dev/null || true
-          cp -r img/* _site/img/ 2>/dev/null || true
-          cp -r icon/* _site/icon/ 2>/dev/null || true
-          
-          # Modify paths in HTML
-          sed -i 's|href="css/|href="/css/|g' _site/index.html
-          sed -i 's|src="css/|src="/css/|g' _site/index.html
-          sed -i 's|href="js/|href="/js/|g' _site/index.html
-          sed -i 's|src="js/|src="/js/|g' _site/index.html
-          sed -i 's|src="img/|src="/img/|g' _site/index.html
-          sed -i 's|src="icon/|src="/icon/|g' _site/index.html
-          
-          # Debug information
-          echo "Directory contents:"
-          ls -lR _site
-          echo "Total size:"
-          du -sh _site
-      
-      - name: Verify Artifact Path
-        run: |
-          if [ ! -d "_site" ]; then
-            echo "ERROR: _site directory does not exist!"
-            exit 1
-          fi
+
       - name: Setup Pages
         uses: actions/configure-pages@v4
-      
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Upload Pages Artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: _site
-      
+          path: './index.html'
+
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
