@@ -20,26 +20,37 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
       
+      - name: List files in the repository
+        run: ls -la
+      
       - name: Prepare Deployment Directory
         run: |
           mkdir -p _site
           
           # Copy entire project structure to preserve assets
-          cp -r css _site/
-          cp -r js _site/
-          cp -r icon _site/
-          cp -r img _site/
+          cp -r css _site/ || true
+          cp -r js _site/ || true
+          cp -r icon _site/ || true
+          cp -r img _site/ || true
+          
+          # Find the HTML file (assumes it's the only .html file)
+          HTML_FILE=$(find . -maxdepth 1 -name "*.html")
+          
+          if [ -z "$HTML_FILE" ]; then
+            echo "No HTML file found!"
+            exit 1
+          fi
           
           # Modify HTML to use relative paths
-          sed -i 's|href="css/|href="/css/|g' paste.txt
-          sed -i 's|href="https://fonts.googleapis.com|href="//fonts.googleapis.com|g' paste.txt
-          sed -i 's|src="css/|src="/css/|g' paste.txt
-          sed -i 's|src="js/|src="/js/|g' paste.txt
-          sed -i 's|src="img/|src="/img/|g' paste.txt
-          sed -i 's|src="icon/|src="/icon/|g' paste.txt
+          sed -i 's|href="css/|href="/css/|g' "$HTML_FILE"
+          sed -i 's|href="https://fonts.googleapis.com|href="//fonts.googleapis.com|g' "$HTML_FILE"
+          sed -i 's|src="css/|src="/css/|g' "$HTML_FILE"
+          sed -i 's|src="js/|src="/js/|g' "$HTML_FILE"
+          sed -i 's|src="img/|src="/img/|g' "$HTML_FILE"
+          sed -i 's|src="icon/|src="/icon/|g' "$HTML_FILE"
           
           # Copy modified HTML
-          cp paste.txt _site/index.html
+          cp "$HTML_FILE" _site/index.html
       
       - name: Setup Pages
         uses: actions/configure-pages@v4
