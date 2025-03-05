@@ -24,6 +24,21 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Prepare Deployment Directory
+        run: |
+          # Create a deployment directory
+          mkdir -p _site
+
+          # Copy index.html and other static assets
+          cp index.html _site/
+          cp -r css/ _site/css/ || echo "No CSS directory found"
+          cp -r js/ _site/js/ || echo "No JS directory found"
+          cp -r img/ _site/img/ || echo "No images directory found"
+          cp -r icon/ _site/icon/ || echo "No icons directory found"
+
+          # Debug: List the contents of the _site directory
+          ls -R _site
+
       - name: Setup Pages
         uses: actions/configure-pages@v4
         with:
@@ -32,7 +47,7 @@ jobs:
       - name: Upload Pages Artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './index.html'
+          path: '_site/'
 
       - name: Deploy to GitHub Pages
         id: deployment
