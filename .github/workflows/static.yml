@@ -20,20 +20,21 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
       
-      - name: List files in the repository
-        run: ls -la
-      
       - name: Prepare Deployment Directory
         run: |
-          mkdir -p _site
+          mkdir -p _site/css _site/js _site/icon _site/img
           
-          # Copy entire project structure to preserve assets
-          cp -r css _site/ || true
-          cp -r js _site/ || true
-          cp -r icon _site/ || true
-          cp -r img _site/ || true
+          # Copy and optimize CSS files
+          find css -type f \( -name "*.css" \) -exec cp {} _site/css/ \;
           
-          # Find the HTML file (assumes it's the only .html file)
+          # Copy and optimize JS files
+          find js -type f \( -name "*.js" \) -exec cp {} _site/js/ \;
+          
+          # Copy essential icons and images (limit size)
+          find icon -type f \( -name "*.png" -o -name "*.jpg" -o -name "*.svg" \) -exec cp {} _site/icon/ \;
+          find img -type f \( -name "*.png" -o -name "*.jpg" -o -name "*.svg" \) -exec cp {} _site/img/ \;
+          
+          # Find the HTML file
           HTML_FILE=$(find . -maxdepth 1 -name "*.html")
           
           if [ -z "$HTML_FILE" ]; then
@@ -41,7 +42,7 @@ jobs:
             exit 1
           fi
           
-          # Modify HTML to use relative paths
+          # Modify HTML to use relative paths and remove unnecessary attributes
           sed -i 's|href="css/|href="/css/|g' "$HTML_FILE"
           sed -i 's|href="https://fonts.googleapis.com|href="//fonts.googleapis.com|g' "$HTML_FILE"
           sed -i 's|src="css/|src="/css/|g' "$HTML_FILE"
@@ -49,8 +50,14 @@ jobs:
           sed -i 's|src="img/|src="/img/|g' "$HTML_FILE"
           sed -i 's|src="icon/|src="/icon/|g' "$HTML_FILE"
           
+          # Remove any GitHub token or sensitive information
+          sed -i '/ghp_/d' "$HTML_FILE"
+          
           # Copy modified HTML
           cp "$HTML_FILE" _site/index.html
+          
+          # Check total size
+          du -sh _site
       
       - name: Setup Pages
         uses: actions/configure-pages@v4
@@ -61,6 +68,7 @@ jobs:
           name: github-pages
           path: '_site'
           retention-days: 1
+          compression-level: 9  # Maximum compression
       
       - name: Deploy to GitHub Pages
         id: deployment
