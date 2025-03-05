@@ -39,7 +39,7 @@ jobs:
           cp "$HTML_FILE" _site/index.html
           
           # Create directories
-          mkdir -p *site/css *site/js *site/icon *site/img
+          mkdir -p _site/css _site/js _site/icon _site/img
           
           # Copy essential files with permission reset
           cp css/*.css _site/css/ 2>/dev/null || true
