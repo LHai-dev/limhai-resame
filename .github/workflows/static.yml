@@ -71,12 +71,10 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v4
       
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
+      - name: Upload Pages Artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          name: github-pages
           path: _site
-          retention-days: 1
       
       - name: Deploy to GitHub Pages
         id: deployment
