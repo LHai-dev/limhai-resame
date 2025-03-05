@@ -67,16 +67,6 @@ jobs:
             echo "ERROR: _site directory does not exist!"
             exit 1
           fi
-      - name: Debug File Copying
-        run: |
-          echo "CSS files:"
-          ls -l css/
-          echo "JS files:"
-          ls -l js/
-          echo "Copied CSS files:"
-          ls -l _site/css/
-          echo "Copied JS files:"
-          ls -l _site/js/
       - name: Setup Pages
         uses: actions/configure-pages@v4
       
