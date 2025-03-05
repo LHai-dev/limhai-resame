@@ -22,41 +22,40 @@ jobs:
       
       - name: Prepare Deployment Directory
         run: |
+          mkdir -p _site
+          
+          # Copy only essential files
+          cp *.html _site/index.html
+          
+          # Create minimal directories
           mkdir -p _site/css _site/js _site/icon _site/img
           
-          # Copy and optimize CSS files
-          find css -type f \( -name "*.css" \) -exec cp {} _site/css/ \;
+          # Copy minimal CSS files (only necessary ones)
+          cp css/bootstrap.min.css _site/css/ 2>/dev/null || true
+          cp css/c.css _site/css/ 2>/dev/null || true
           
-          # Copy and optimize JS files
-          find js -type f \( -name "*.js" \) -exec cp {} _site/js/ \;
+          # Copy minimal JS files
+          cp js/jquery-3.4.1.min.js _site/js/ 2>/dev/null || true
+          cp js/bootstrap.min.js _site/js/ 2>/dev/null || true
+          cp js/main.js _site/js/ 2>/dev/null || true
           
-          # Copy essential icons and images (limit size)
-          find icon -type f \( -name "*.png" -o -name "*.jpg" -o -name "*.svg" \) -exec cp {} _site/icon/ \;
-          find img -type f \( -name "*.png" -o -name "*.jpg" -o -name "*.svg" \) -exec cp {} _site/img/ \;
+          # Copy minimal images and icons
+          find img -maxdepth 1 \( -name "meiyi.jpg" -o -name "*.png" \) -exec cp {} _site/img/ \; 2>/dev/null
+          find icon -maxdepth 1 \( -name "*.png" -o -name "*.svg" \) -exec cp {} _site/icon/ \; 2>/dev/null
           
-          # Find the HTML file
-          HTML_FILE=$(find . -maxdepth 1 -name "*.html")
+          # Modify HTML to use relative paths
+          sed -i 's|href="css/|href="/css/|g' _site/index.html
+          sed -i 's|href="https://fonts.googleapis.com|href="//fonts.googleapis.com|g' _site/index.html
+          sed -i 's|src="css/|src="/css/|g' _site/index.html
+          sed -i 's|src="js/|src="/js/|g' _site/index.html
+          sed -i 's|src="img/|src="/img/|g' _site/index.html
+          sed -i 's|src="icon/|src="/icon/|g' _site/index.html
           
-          if [ -z "$HTML_FILE" ]; then
-            echo "No HTML file found!"
-            exit 1
-          fi
+          # Remove any sensitive information
+          sed -i '/ghp_/d' _site/index.html
           
-          # Modify HTML to use relative paths and remove unnecessary attributes
-          sed -i 's|href="css/|href="/css/|g' "$HTML_FILE"
-          sed -i 's|href="https://fonts.googleapis.com|href="//fonts.googleapis.com|g' "$HTML_FILE"
-          sed -i 's|src="css/|src="/css/|g' "$HTML_FILE"
-          sed -i 's|src="js/|src="/js/|g' "$HTML_FILE"
-          sed -i 's|src="img/|src="/img/|g' "$HTML_FILE"
-          sed -i 's|src="icon/|src="/icon/|g' "$HTML_FILE"
-          
-          # Remove any GitHub token or sensitive information
-          sed -i '/ghp_/d' "$HTML_FILE"
-          
-          # Copy modified HTML
-          cp "$HTML_FILE" _site/index.html
-          
-          # Check total size
+          # List contents and size
+          ls -lR _site
           du -sh _site
       
       - name: Setup Pages
@@ -68,7 +67,7 @@ jobs:
           name: github-pages
           path: '_site'
           retention-days: 1
-          compression-level: 9  # Maximum compression
+          compression-level: 9
       
       - name: Deploy to GitHub Pages
         id: deployment
