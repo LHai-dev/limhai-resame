@@ -22,41 +22,51 @@ jobs:
       
       - name: Prepare Deployment Directory
         run: |
+          # Ensure clean deployment directory
+          rm -rf _site
           mkdir -p _site
           
-          # Copy only essential files
-          cp *.html _site/index.html
+          # Fix file permissions
+          find . -type f -exec chmod 644 {} \;
+          find . -type d -exec chmod 755 {} \;
           
-          # Create minimal directories
+          # Copy HTML file
+          HTML_FILE=$(find . -maxdepth 1 -name "*.html")
+          if [ -z "$HTML_FILE" ]; then
+            echo "No HTML file found!"
+            exit 1
+          fi
+          cp "$HTML_FILE" _site/index.html
+          
+          # Create directories
           mkdir -p _site/css _site/js _site/icon _site/img
           
-          # Copy minimal CSS files (only necessary ones)
-          cp css/bootstrap.min.css _site/css/ 2>/dev/null || true
-          cp css/c.css _site/css/ 2>/dev/null || true
+          # Copy essential files with permission reset
+          cp css/*.css _site/css/ 2>/dev/null || true
+          cp js/*.js _site/js/ 2>/dev/null || true
+          cp -r img/* _site/img/ 2>/dev/null || true
+          cp -r icon/* _site/icon/ 2>/dev/null || true
           
-          # Copy minimal JS files
-          cp js/jquery-3.4.1.min.js _site/js/ 2>/dev/null || true
-          cp js/bootstrap.min.js _site/js/ 2>/dev/null || true
-          cp js/main.js _site/js/ 2>/dev/null || true
-          
-          # Copy minimal images and icons
-          find img -maxdepth 1 \( -name "meiyi.jpg" -o -name "*.png" \) -exec cp {} _site/img/ \; 2>/dev/null
-          find icon -maxdepth 1 \( -name "*.png" -o -name "*.svg" \) -exec cp {} _site/icon/ \; 2>/dev/null
-          
-          # Modify HTML to use relative paths
+          # Modify paths in HTML
           sed -i 's|href="css/|href="/css/|g' _site/index.html
-          sed -i 's|href="https://fonts.googleapis.com|href="//fonts.googleapis.com|g' _site/index.html
           sed -i 's|src="css/|src="/css/|g' _site/index.html
+          sed -i 's|href="js/|href="/js/|g' _site/index.html
           sed -i 's|src="js/|src="/js/|g' _site/index.html
           sed -i 's|src="img/|src="/img/|g' _site/index.html
           sed -i 's|src="icon/|src="/icon/|g' _site/index.html
           
-          # Remove any sensitive information
-          sed -i '/ghp_/d' _site/index.html
-          
-          # List contents and size
+          # Debug information
+          echo "Directory contents:"
           ls -lR _site
+          echo "Total size:"
           du -sh _site
+      
+      - name: Verify Artifact Path
+        run: |
+          if [ ! -d "_site" ]; then
+            echo "ERROR: _site directory does not exist!"
+            exit 1
+          fi
       
       - name: Setup Pages
         uses: actions/configure-pages@v4
@@ -65,9 +75,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: github-pages
-          path: '_site'
+          path: _site
           retention-days: 1
-          compression-level: 9
       
       - name: Deploy to GitHub Pages
         id: deployment
