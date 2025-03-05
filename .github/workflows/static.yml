@@ -39,7 +39,7 @@ jobs:
           cp "$HTML_FILE" _site/index.html
           
           # Create directories
-          mkdir -p _site/css _site/js _site/icon _site/img
+          mkdir -p *site/css *site/js *site/icon *site/img
           
           # Copy essential files with permission reset
           cp css/*.css _site/css/ 2>/dev/null || true
@@ -67,7 +67,16 @@ jobs:
             echo "ERROR: _site directory does not exist!"
             exit 1
           fi
-      
+      - name: Debug File Copying
+        run: |
+          echo "CSS files:"
+          ls -l css/
+          echo "JS files:"
+          ls -l js/
+          echo "Copied CSS files:"
+          ls -l _site/css/
+          echo "Copied JS files:"
+          ls -l _site/js/
       - name: Setup Pages
         uses: actions/configure-pages@v4
       
