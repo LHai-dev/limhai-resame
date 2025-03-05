@@ -37,6 +37,9 @@ jobs:
           sed -i 's|src="js/|src="/js/|g' paste.txt
           sed -i 's|src="img/|src="/img/|g' paste.txt
           sed -i 's|src="icon/|src="/icon/|g' paste.txt
+          
+          # Copy modified HTML
+          cp paste.txt _site/index.html
       
       - name: Setup Pages
         uses: actions/configure-pages@v4
